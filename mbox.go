@@ -63,15 +63,13 @@ func Open(path string, format Format) (*Mbox, error) {
 	return mbox, nil
 }
 
-func OpenFile(file *os.File, format Format) (*Mbox, error) {
+func OpenFile(file *os.File, format Format) *Mbox {
 	mbox := &Mbox{
 		Format: format,
-
 		file:   file,
 		stream: stream.NewStream(file),
 	}
-
-	return mbox, nil
+	return mbox
 }
 
 func (mbox *Mbox) Read() (*Message, error) {
