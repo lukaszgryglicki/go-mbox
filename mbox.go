@@ -63,6 +63,17 @@ func Open(path string, format Format) (*Mbox, error) {
 	return mbox, nil
 }
 
+func OpenFile(file *os.File, format Format) (*Mbox, error) {
+	mbox := &Mbox{
+		Format: format,
+
+		file:   file,
+		stream: stream.NewStream(file),
+	}
+
+	return mbox, nil
+}
+
 func (mbox *Mbox) Read() (*Message, error) {
 	// Header
 	line, err := mbox.stream.ReadUntilAndSkip([]byte{'\r', '\n'})
