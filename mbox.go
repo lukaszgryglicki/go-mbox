@@ -17,7 +17,7 @@ package mbox
 import (
 	"errors"
 	"fmt"
-  "io"
+	"io"
 	"os"
 
 	"github.com/galdor/go-stream"
@@ -33,49 +33,29 @@ func (f *Format) Parse(s string) error {
 	switch s {
 	case "mboxrd":
 		*f = Mboxrd
-
 	default:
 		return errors.New("unknown format")
 	}
-
 	return nil
 }
 
 type Mbox struct {
 	Format Format
-
-	file   io.Reader
-	stream *stream.Stream
+	Stream *stream.Stream
 }
 
-func Open(path string, format Format) (*Mbox, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
+func Open(data []byte, format Format) *Mbox {
 	mbox := &Mbox{
 		Format: format,
-
-		file:   file,
-		stream: stream.NewStream(file),
-	}
-
-	return mbox, nil
-}
-
-func OpenFile(file io.Reader, format Format) *Mbox {
-	mbox := &Mbox{
-		Format: format,
-		file:   file,
-		stream: stream.NewStream(file),
+		Stream: stream.NewStreamBytes(data),
 	}
 	return mbox
 }
 
 func (mbox *Mbox) Read() (*Message, error) {
 	// Header
-	line, err := mbox.stream.ReadUntilAndSkip([]byte{'\r', '\n'})
+	defer func() { mbox.Stream = nil }()
+	line, err := mbox.Stream.ReadUntilAndSkip([]byte{'\r', '\n'})
 	if err != nil {
 		return nil, err
 	} else if line == nil {
@@ -88,19 +68,19 @@ func (mbox *Mbox) Read() (*Message, error) {
 	}
 
 	// Message
-	data, err := mbox.stream.ReadUntil([]byte("\r\nFrom "))
+	data, err := mbox.Stream.ReadUntil([]byte("\r\nFrom "))
 	if err != nil {
 		return nil, fmt.Errorf("cannot read message %q: %v", id, err)
 	}
 
 	if data == nil {
 		// Last message
-		data, err = mbox.stream.ReadAll()
+		data, err = mbox.Stream.ReadAll()
 		if err != nil {
 			return nil, fmt.Errorf("cannot read last message %q: %v", id, err)
 		}
 	} else {
-		err = mbox.stream.Skip(2) // "\r\n"
+		err = mbox.Stream.Skip(2) // "\r\n"
 		if err != nil {
 			return nil, fmt.Errorf("cannot skip end of message header %q: %v",
 				id, err)
@@ -110,10 +90,4 @@ func (mbox *Mbox) Read() (*Message, error) {
 	msg := NewMessage(id, date, UnescapeMessageData(data))
 
 	return msg, nil
-}
-
-func (mbox *Mbox) Close() {
-	//mbox.file.Close()
-	mbox.file = nil
-	mbox.stream = nil
 }
