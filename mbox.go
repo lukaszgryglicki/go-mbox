@@ -17,6 +17,7 @@ package mbox
 import (
 	"errors"
 	"fmt"
+  "io"
 	"os"
 
 	"github.com/galdor/go-stream"
@@ -112,7 +113,7 @@ func (mbox *Mbox) Read() (*Message, error) {
 }
 
 func (mbox *Mbox) Close() {
-	mbox.file.Close()
+	//mbox.file.Close()
 	mbox.file = nil
 	mbox.stream = nil
 }
