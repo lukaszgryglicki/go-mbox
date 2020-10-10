@@ -43,7 +43,7 @@ func (f *Format) Parse(s string) error {
 type Mbox struct {
 	Format Format
 
-	file   *os.File
+	file   io.Reader
 	stream *stream.Stream
 }
 
@@ -63,7 +63,7 @@ func Open(path string, format Format) (*Mbox, error) {
 	return mbox, nil
 }
 
-func OpenFile(file *os.File, format Format) *Mbox {
+func OpenFile(file io.Reader, format Format) *Mbox {
 	mbox := &Mbox{
 		Format: format,
 		file:   file,
